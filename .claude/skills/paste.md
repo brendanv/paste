@@ -19,7 +19,7 @@ All API requests require two headers:
 ## Defaults
 
 Unless the user specifies otherwise:
-- `visibility`: `private`
+- `visibility`: `logged_in`
 - `expiration`: `1week`
 
 Available visibility values: `public`, `private`, `logged_in`
@@ -33,7 +33,7 @@ Content-Type: application/json
 ```json
 {
   "content": "your text here",
-  "visibility": "private",
+  "visibility": "logged_in",
   "expiration": "1week",
   "title": "optional title",
   "customSlug": "optional-slug"
@@ -49,7 +49,7 @@ curl -s -X POST "$PASTE_URL/api/create" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -d '{
     "content": "hello world",
-    "visibility": "private",
+    "visibility": "logged_in",
     "expiration": "1week"
   }'
 ```
@@ -61,7 +61,7 @@ Content-Type: multipart/form-data
 
 Form fields:
 - `file` (required): the image file. Supported types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/svg+xml`. Max size: 10 MB.
-- `visibility` (optional, default `private`)
+- `visibility` (optional, default `logged_in`)
 - `expiration` (optional, default `1week`)
 - `title` (optional)
 - `customSlug` (optional)
@@ -73,7 +73,7 @@ curl -s -X POST "$PASTE_URL/api/upload" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -F "file=@/path/to/image.png" \
-  -F "visibility=private" \
+  -F "visibility=logged_in" \
   -F "expiration=1week"
 ```
 
@@ -113,7 +113,7 @@ RESPONSE=$(curl -s -X POST "$PASTE_URL/api/create" \
   -H "Content-Type: application/json" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
-  -d "{\"content\": \"$(cat file.txt | jq -Rs .)\", \"visibility\": \"private\", \"expiration\": \"1week\"}")
+  -d "{\"content\": \"$(cat file.txt | jq -Rs .)\", \"visibility\": \"logged_in\", \"expiration\": \"1week\"}")
 
 SLUG=$(echo "$RESPONSE" | jq -r '.slug')
 FULL_URL="${PASTE_URL}/p/${SLUG}"
@@ -127,7 +127,7 @@ RESPONSE=$(curl -s -X POST "$PASTE_URL/api/upload" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -F "file=@screenshot.png" \
-  -F "visibility=private" \
+  -F "visibility=logged_in" \
   -F "expiration=1week")
 
 SLUG=$(echo "$RESPONSE" | jq -r '.slug')
