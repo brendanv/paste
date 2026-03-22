@@ -106,6 +106,19 @@ FULL_URL="${PASTE_URL}$(echo "$RESPONSE" | jq -r '.url')"
 
 **Always output the full URL** so the user can navigate directly to the paste.
 
+## Raw view
+
+Every paste has a raw view at `$PASTE_URL/p/<slug>/raw`:
+
+- **Text pastes**: returns the content as `text/plain` with no surrounding HTML
+- **Image pastes**: redirects to the image and returns it with its original `Content-Type`
+
+Visibility rules are enforced — unauthenticated users cannot access private or `logged_in` pastes via the raw URL either.
+
+```
+RAW_URL="${PASTE_URL}/p/${SLUG}/raw"
+```
+
 ## Complete example (text paste)
 
 ```bash
