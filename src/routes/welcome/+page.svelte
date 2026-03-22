@@ -13,7 +13,7 @@
 <header>
 	<hgroup>
 		<h1>Welcome to paste.</h1>
-		<p>A semi-private paste service for sharing code and text</p>
+		<p>A semi-private paste service for sharing code, text, and images</p>
 	</hgroup>
 </header>
 
@@ -31,7 +31,8 @@
 			<li>
 				<strong>Expiration options</strong> - Set pastes to expire from 1 hour to 1 year, or keep forever
 			</li>
-			<li><strong>API access</strong> - Simple JSON API for creating pastes on the go</li>
+			<li><strong>Image uploads</strong> - Store and share images via API (JPEG, PNG, GIF, WebP, SVG)</li>
+			<li><strong>API access</strong> - Simple JSON API for creating pastes and uploading images</li>
 		</ul>
 
 		<h3>Examples</h3>
@@ -43,6 +44,7 @@
 			<li><a href="/p/shell-example/bash">Shell scripts</a> - Bash and PowerShell</li>
 			<li><a href="/p/data-example/xml">Data formats</a> - CSV, XML, structured data</li>
 			<li><a href="/p/text-example">Plain text</a> - Simple text sharing</li>
+			<li><a href="/p/sample-image">Sample image</a> - Image upload and display</li>
 		</ul>
 	</article>
 </section>

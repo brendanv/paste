@@ -105,7 +105,7 @@
 	<header>
 		<hgroup>
 			<h1>Welcome to paste.</h1>
-			<p class="secondary">A semi-private paste service for sharing code and text</p>
+			<p class="secondary">A semi-private paste service for sharing code, text, and images</p>
 		</hgroup>
 	</header>
 
