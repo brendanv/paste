@@ -17,6 +17,12 @@
 			"id": "2cee71ca21934172b47281a021d3a4b9"
 		}
 	],
+	"r2_buckets": [
+		{
+			"binding": "PASTE_IMAGES",
+			"bucket_name": "paste-images"
+		}
+	],
 	"vars": {
 		"AUTH_AUTH0_DOMAIN": "https://auth.vlc.family",
 		"GITHUB_REPO": "https://github.com/brendanv/paste."

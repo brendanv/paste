@@ -1,5 +1,26 @@
+export interface PasteMetadata {
+	title: string | null;
+	visibility: 'public' | 'private' | 'logged_in';
+	createdAt: number;
+	userId: string;
+	slug: string;
+	type: 'text' | 'image';
+	contentType?: string;
+	expiration?: 'never' | '1hour' | '1day' | '1week' | '1month' | '6months' | '1year';
+}
+
 export interface CreatePasteOptions {
 	content: string;
+	visibility: 'public' | 'private' | 'logged_in';
+	expiration: 'never' | '1hour' | '1day' | '1week' | '1month' | '6months' | '1year';
+	title?: string;
+	customSlug?: string;
+	userId: string;
+}
+
+export interface CreateImagePasteOptions {
+	imageData: ArrayBuffer;
+	contentType: string;
 	visibility: 'public' | 'private' | 'logged_in';
 	expiration: 'never' | '1hour' | '1day' | '1week' | '1month' | '6months' | '1year';
 	title?: string;
@@ -12,6 +33,16 @@ export interface CreatePasteResult {
 	slug?: string;
 	error?: string;
 }
+
+const ALLOWED_IMAGE_TYPES = [
+	'image/jpeg',
+	'image/png',
+	'image/gif',
+	'image/webp',
+	'image/svg+xml'
+] as const;
+
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 function generateRandomSlug(): string {
 	const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -37,6 +68,50 @@ function getExpirationTtl(expiration: string): number | null {
 	return durations[expiration as keyof typeof durations] || null;
 }
 
+function validateCommonOptions(
+	visibility: string,
+	expiration: string,
+	customSlug?: string
+): string | null {
+	if (!['public', 'private', 'logged_in'].includes(visibility)) {
+		return 'Invalid visibility option';
+	}
+
+	if (!['never', '1hour', '1day', '1week', '1month', '6months', '1year'].includes(expiration)) {
+		return 'Invalid expiration option';
+	}
+
+	if (customSlug) {
+		if (customSlug.length < 3 || customSlug.length > 50) {
+			return 'Custom URL slug must be between 3 and 50 characters';
+		}
+		if (!/^[a-zA-Z0-9_-]+$/.test(customSlug)) {
+			return 'Custom URL slug can only contain letters, numbers, hyphens, and underscores';
+		}
+	}
+
+	return null;
+}
+
+async function resolveSlug(customSlug: string | undefined, kv: any): Promise<string | null> {
+	if (customSlug) {
+		const existing = await kv?.get(`paste-${customSlug}`);
+		if (existing !== null) return null;
+		return customSlug;
+	}
+
+	let attempts = 0;
+	let slug: string;
+	do {
+		slug = generateRandomSlug();
+		const existing = await kv?.get(`paste-${slug}`);
+		if (existing === null) return slug;
+		attempts++;
+	} while (attempts < 10);
+
+	return null;
+}
+
 export async function createPaste(
 	options: CreatePasteOptions,
 	kv: any
@@ -47,54 +122,25 @@ export async function createPaste(
 		return { success: false, error: 'Content is required' };
 	}
 
-	if (!['public', 'private', 'logged_in'].includes(visibility)) {
-		return { success: false, error: 'Invalid visibility option' };
+	const validationError = validateCommonOptions(visibility, expiration, customSlug);
+	if (validationError) {
+		return { success: false, error: validationError };
 	}
 
-	if (!['never', '1hour', '1day', '1week', '1month', '6months', '1year'].includes(expiration)) {
-		return { success: false, error: 'Invalid expiration option' };
-	}
-
-	if (customSlug) {
-		if (customSlug.length < 3 || customSlug.length > 50) {
-			return { success: false, error: 'Custom URL slug must be between 3 and 50 characters' };
-		}
-		if (!/^[a-zA-Z0-9_-]+$/.test(customSlug)) {
-			return {
-				success: false,
-				error: 'Custom URL slug can only contain letters, numbers, hyphens, and underscores'
-			};
-		}
-	}
-
-	let slug = customSlug;
+	const slug = await resolveSlug(customSlug, kv);
 	if (!slug) {
-		// Generate random slug and check availability
-		let attempts = 0;
-		do {
-			slug = generateRandomSlug();
-			const existing = await kv?.get(`paste-${slug}`);
-			if (!existing) break;
-			attempts++;
-		} while (attempts < 10);
-
-		if (attempts >= 10) {
-			return { success: false, error: 'Unable to generate unique slug, please try again' };
-		}
-	} else {
-		// Check if custom slug is available
-		const existing = await kv?.get(`paste-${slug}`);
-		if (existing) {
-			return { success: false, error: 'This custom URL slug is already in use' };
-		}
+		return customSlug
+			? { success: false, error: 'This custom URL slug is already in use' }
+			: { success: false, error: 'Unable to generate unique slug, please try again' };
 	}
 
-	const metadata = {
+	const metadata: PasteMetadata = {
 		title: title || null,
-		visibility,
+		visibility: visibility as PasteMetadata['visibility'],
 		createdAt: Date.now(),
 		userId,
-		slug
+		slug,
+		type: 'text'
 	};
 
 	const expirationTtl = getExpirationTtl(expiration);
@@ -110,5 +156,72 @@ export async function createPaste(
 	} catch (error) {
 		console.error('Failed to store paste:', error);
 		return { success: false, error: 'Failed to create paste' };
+	}
+}
+
+export async function createImagePaste(
+	options: CreateImagePasteOptions,
+	kv: any,
+	r2: any
+): Promise<CreatePasteResult> {
+	const { imageData, contentType, visibility, expiration, title, customSlug, userId } = options;
+
+	if (!ALLOWED_IMAGE_TYPES.includes(contentType as (typeof ALLOWED_IMAGE_TYPES)[number])) {
+		return {
+			success: false,
+			error: `Unsupported image type. Allowed: ${ALLOWED_IMAGE_TYPES.join(', ')}`
+		};
+	}
+
+	if (imageData.byteLength > MAX_IMAGE_SIZE) {
+		return { success: false, error: 'Image exceeds 10 MB size limit' };
+	}
+
+	if (imageData.byteLength === 0) {
+		return { success: false, error: 'Image data is empty' };
+	}
+
+	const validationError = validateCommonOptions(visibility, expiration, customSlug);
+	if (validationError) {
+		return { success: false, error: validationError };
+	}
+
+	const slug = await resolveSlug(customSlug, kv);
+	if (!slug) {
+		return customSlug
+			? { success: false, error: 'This custom URL slug is already in use' }
+			: { success: false, error: 'Unable to generate unique slug, please try again' };
+	}
+
+	const metadata: PasteMetadata = {
+		title: title || null,
+		visibility: visibility as PasteMetadata['visibility'],
+		createdAt: Date.now(),
+		userId,
+		slug,
+		type: 'image',
+		contentType,
+		expiration: expiration as PasteMetadata['expiration']
+	};
+
+	const expirationTtl = getExpirationTtl(expiration);
+	const putOptions: any = { metadata };
+	if (expirationTtl) {
+		putOptions.expirationTtl = expirationTtl;
+	}
+
+	const r2Key = `${expiration}/image-${slug}`;
+	try {
+		await r2?.put(r2Key, imageData, { httpMetadata: { contentType } });
+		await kv?.put(`paste-${slug}`, '', putOptions);
+		return { success: true, slug };
+	} catch (error) {
+		console.error('Failed to store image paste:', error);
+		try {
+			await r2?.delete(r2Key);
+		} catch {
+			// best-effort cleanup
+		}
+		return { success: false, error: 'Failed to create image paste' };
 	}
 }

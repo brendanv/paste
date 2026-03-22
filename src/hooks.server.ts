@@ -5,8 +5,8 @@ import { sequence } from '@sveltejs/kit/hooks';
 async function apiKeyAuth({ event, resolve }) {
 	const { url, request, platform } = event;
 
-	// API routes requires a user id and API key in headers
-	if (url.pathname.startsWith('/api/')) {
+	// API routes require a user id and API key in headers, except image serving
+	if (url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/image/')) {
 		const userId = request.headers.get('X-PASTE-USERID');
 		const apiKey = request.headers.get('X-PASTE-API-KEY');
 

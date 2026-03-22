@@ -33,6 +33,7 @@ bun run cf-typegen  # Regenerate Cloudflare Worker type definitions
    - `AUTH_AUTH0_SECRET` — Auth0 client secret
 2. Update `wrangler.jsonc` with your Auth0 domain and GitHub repo URL
 3. Create a Cloudflare KV namespace: `wrangler kv:namespace create "PASTE_KV"` and update the binding ID in `wrangler.jsonc`
+4. Create a Cloudflare R2 bucket: `wrangler r2 bucket create paste-images` (used for image uploads)
 
 ## Code Style
 
@@ -51,6 +52,8 @@ src/
 ├── routes/
 │   ├── +page.svelte      # Home page (create paste form)
 │   ├── api/create/       # JSON API endpoint (POST /api/create)
+│   ├── api/upload/       # JSON API endpoint (POST /api/upload) — image uploads
+│   ├── api/image/[slug]/ # Image serving endpoint (GET /api/image/[slug])
 │   ├── p/[slug]/[[lang]] # Paste display route
 │   ├── manage/           # Paste management
 │   └── ...
@@ -65,3 +68,14 @@ src/
 - Visibility options: public, private, logged-in users only
 - Syntax highlighting runs client-side via Shiki
 - The KV binding is named `PASTE_KV` (configured in `wrangler.jsonc`)
+
+### Image Uploads
+
+- Images are uploaded **API-only** via `POST /api/upload` (multipart/form-data) — no web UI
+- Image binary data is stored in Cloudflare R2 as `image-{slug}`; KV stores metadata only (value is `""`)
+- KV metadata includes `type: 'image'` and `contentType` fields; text pastes use `type: 'text'`
+- Supported MIME types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/svg+xml`
+- Maximum image size: 10 MB
+- Images are served through the app at `GET /api/image/[slug]` (not via public R2 URLs) so visibility rules are enforced
+- The R2 binding is named `PASTE_IMAGES` (configured in `wrangler.jsonc`)
+- Deleting a paste also deletes the corresponding R2 object for image pastes

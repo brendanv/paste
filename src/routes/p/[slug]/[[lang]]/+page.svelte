@@ -12,7 +12,7 @@
 
 	async function copyContent() {
 		try {
-			await navigator.clipboard.writeText(paste.content);
+			await navigator.clipboard.writeText(paste.content ?? '');
 		} catch (err) {
 			console.error('Failed to copy content: ', err);
 			alert('Failed to copy content');
@@ -41,6 +41,7 @@
 	}
 
 	$: isOwner = data.session?.user?.id === paste.userId;
+	$: isImage = paste.type === 'image';
 	$: titleSuffix = language ? ` (${language})` : '';
 </script>
 
@@ -60,14 +61,18 @@
 </header>
 
 <section>
-	{#if language}
+	{#if isImage}
+		<img src="/api/image/{paste.slug}" alt={paste.title || 'Image paste'} style="max-width: 100%;" />
+	{:else if language}
 		<SyntaxHighlighter code={paste.content} {language} />
 	{:else}
 		<pre><code>{paste.content}</code></pre>
 	{/if}
 
 	<div class="grid">
-		<button type="button" on:click={copyContent}>Copy Content</button>
+		{#if !isImage}
+			<button type="button" on:click={copyContent}>Copy Content</button>
+		{/if}
 		<button type="button" on:click={copyLink} class="secondary">Copy Link</button>
 		{#if isOwner}
 			<button type="button" on:click={deletePaste} class="contrast">Delete</button>
