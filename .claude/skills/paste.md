@@ -45,6 +45,7 @@ Content-Type: application/json
 ```bash
 curl -s -X POST "$PASTE_URL/api/create" \
   -H "Content-Type: application/json" \
+  -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -d '{
@@ -70,6 +71,7 @@ Form fields:
 
 ```bash
 curl -s -X POST "$PASTE_URL/api/upload" \
+  -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -F "file=@/path/to/image.png" \
@@ -124,6 +126,7 @@ RAW_URL="${PASTE_URL}/p/${SLUG}/raw"
 ```bash
 RESPONSE=$(curl -s -X POST "$PASTE_URL/api/create" \
   -H "Content-Type: application/json" \
+  -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -d "{\"content\": \"$(cat file.txt | jq -Rs .)\", \"visibility\": \"logged_in\", \"expiration\": \"1week\"}")
@@ -137,6 +140,7 @@ echo "Paste created: $FULL_URL"
 
 ```bash
 RESPONSE=$(curl -s -X POST "$PASTE_URL/api/upload" \
+  -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
   -F "file=@screenshot.png" \
