@@ -1,6 +1,7 @@
-# paste skill
-
-Use this skill to create pastes on the paste service. It handles both text snippets and image uploads.
+---
+name: creating-pastes
+description: Creates text pastes and uploads images to a self-hosted paste service via API. Use when the user wants to share text snippets, code, or image files via a paste URL, or when asked to paste/upload content to the paste service.
+---
 
 ## Configuration (environment variables)
 
@@ -43,16 +44,16 @@ Content-Type: application/json
 ### Example (bash)
 
 ```bash
-curl -s -X POST "$PASTE_URL/api/create" \
+RESPONSE=$(curl -s -X POST "$PASTE_URL/api/create" \
   -H "Content-Type: application/json" \
   -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
-  -d '{
-    "content": "hello world",
-    "visibility": "logged_in",
-    "expiration": "1week"
-  }'
+  -d "{\"content\": \"$(cat file.txt | jq -Rs .)\", \"visibility\": \"logged_in\", \"expiration\": \"1week\"}")
+
+SLUG=$(echo "$RESPONSE" | jq -r '.slug')
+FULL_URL="${PASTE_URL}/p/${SLUG}"
+echo "Paste created: $FULL_URL"
 ```
 
 ## Uploading an image paste
@@ -70,13 +71,17 @@ Form fields:
 ### Example (bash)
 
 ```bash
-curl -s -X POST "$PASTE_URL/api/upload" \
+RESPONSE=$(curl -s -X POST "$PASTE_URL/api/upload" \
   -H "Origin: $PASTE_URL" \
   -H "X-PASTE-USERID: $PASTE_USER_ID" \
   -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
-  -F "file=@/path/to/image.png" \
+  -F "file=@screenshot.png" \
   -F "visibility=logged_in" \
-  -F "expiration=1week"
+  -F "expiration=1week")
+
+SLUG=$(echo "$RESPONSE" | jq -r '.slug')
+FULL_URL="${PASTE_URL}/p/${SLUG}"
+echo "Image uploaded: $FULL_URL"
 ```
 
 ## Response format
@@ -119,35 +124,4 @@ Visibility rules are enforced — unauthenticated users cannot access private or
 
 ```
 RAW_URL="${PASTE_URL}/p/${SLUG}/raw"
-```
-
-## Complete example (text paste)
-
-```bash
-RESPONSE=$(curl -s -X POST "$PASTE_URL/api/create" \
-  -H "Content-Type: application/json" \
-  -H "Origin: $PASTE_URL" \
-  -H "X-PASTE-USERID: $PASTE_USER_ID" \
-  -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
-  -d "{\"content\": \"$(cat file.txt | jq -Rs .)\", \"visibility\": \"logged_in\", \"expiration\": \"1week\"}")
-
-SLUG=$(echo "$RESPONSE" | jq -r '.slug')
-FULL_URL="${PASTE_URL}/p/${SLUG}"
-echo "Paste created: $FULL_URL"
-```
-
-## Complete example (image upload)
-
-```bash
-RESPONSE=$(curl -s -X POST "$PASTE_URL/api/upload" \
-  -H "Origin: $PASTE_URL" \
-  -H "X-PASTE-USERID: $PASTE_USER_ID" \
-  -H "X-PASTE-API-KEY: $PASTE_API_KEY" \
-  -F "file=@screenshot.png" \
-  -F "visibility=logged_in" \
-  -F "expiration=1week")
-
-SLUG=$(echo "$RESPONSE" | jq -r '.slug')
-FULL_URL="${PASTE_URL}/p/${SLUG}"
-echo "Image uploaded: $FULL_URL"
 ```
