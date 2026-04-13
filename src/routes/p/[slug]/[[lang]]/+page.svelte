@@ -69,7 +69,7 @@
 		<pre><code>{paste.content}</code></pre>
 	{/if}
 
-	<div class="grid">
+	<div class="grid" style={isImage ? 'margin-top: 1rem;' : ''}>
 		{#if !isImage}
 			<button type="button" on:click={copyContent}>Copy Content</button>
 		{/if}
