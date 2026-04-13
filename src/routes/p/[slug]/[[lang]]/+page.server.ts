@@ -56,6 +56,48 @@ export const load: PageServerLoad = async ({ params, locals, platform }) => {
 };
 
 export const actions: Actions = {
+	updateTitle: async ({ params, request, locals, platform }) => {
+		const { slug } = params;
+		const session = await locals.auth();
+
+		if (!session?.user) {
+			return fail(401, { error: 'Not authenticated' });
+		}
+
+		const formData = await request.formData();
+		const newTitle = ((formData.get('title') as string) ?? '').trim() || null;
+
+		let pasteResult;
+		try {
+			pasteResult = await platform?.env?.PASTE_KV?.getWithMetadata(`paste-${slug}`);
+			if (!pasteResult?.metadata) {
+				return fail(404, { error: 'Paste not found' });
+			}
+		} catch {
+			return fail(404, { error: 'Paste not found' });
+		}
+
+		const metadata = pasteResult.metadata as PasteMetadata;
+
+		if (session.user.id !== metadata.userId) {
+			return fail(403, { error: 'Not authorized to edit this paste' });
+		}
+
+		const updatedMetadata: PasteMetadata = { ...metadata, title: newTitle };
+		const putOptions: any = { metadata: updatedMetadata };
+
+		if (metadata.expiresAt) {
+			putOptions.expiration = metadata.expiresAt;
+		}
+
+		try {
+			await platform?.env?.PASTE_KV?.put(`paste-${slug}`, pasteResult.value ?? '', putOptions);
+			return { updatedTitle: newTitle };
+		} catch {
+			return fail(500, { error: 'Failed to update title' });
+		}
+	},
+
 	delete: async ({ params, locals, platform }) => {
 		const { slug } = params;
 		const session = await locals.auth();
@@ -83,7 +125,9 @@ export const actions: Actions = {
 		try {
 			await platform?.env?.PASTE_KV?.delete(`paste-${slug}`);
 			if (metadata.type === 'image') {
-				await platform?.env?.PASTE_IMAGES?.delete(`${metadata.expiration ?? 'never'}/image-${slug}`);
+				await platform?.env?.PASTE_IMAGES?.delete(
+					`${metadata.expiration ?? 'never'}/image-${slug}`
+				);
 			}
 		} catch (error) {
 			return fail(500, { error: 'Failed to delete paste' });

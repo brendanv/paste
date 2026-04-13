@@ -7,6 +7,7 @@ export interface PasteMetadata {
 	type: 'text' | 'image';
 	contentType?: string;
 	expiration?: 'never' | '1hour' | '1day' | '1week' | '1month' | '6months' | '1year';
+	expiresAt?: number; // Unix timestamp in seconds; used to preserve TTL on metadata-only updates
 }
 
 export interface CreatePasteOptions {
@@ -134,6 +135,8 @@ export async function createPaste(
 			: { success: false, error: 'Unable to generate unique slug, please try again' };
 	}
 
+	const expirationTtl = getExpirationTtl(expiration);
+
 	const metadata: PasteMetadata = {
 		title: title || null,
 		visibility: visibility as PasteMetadata['visibility'],
@@ -143,7 +146,10 @@ export async function createPaste(
 		type: 'text'
 	};
 
-	const expirationTtl = getExpirationTtl(expiration);
+	if (expirationTtl) {
+		metadata.expiresAt = Math.floor(Date.now() / 1000) + expirationTtl;
+	}
+
 	const putOptions: any = { metadata };
 
 	if (expirationTtl) {
@@ -193,6 +199,8 @@ export async function createImagePaste(
 			: { success: false, error: 'Unable to generate unique slug, please try again' };
 	}
 
+	const expirationTtl = getExpirationTtl(expiration);
+
 	const metadata: PasteMetadata = {
 		title: title || null,
 		visibility: visibility as PasteMetadata['visibility'],
@@ -204,7 +212,10 @@ export async function createImagePaste(
 		expiration: expiration as PasteMetadata['expiration']
 	};
 
-	const expirationTtl = getExpirationTtl(expiration);
+	if (expirationTtl) {
+		metadata.expiresAt = Math.floor(Date.now() / 1000) + expirationTtl;
+	}
+
 	const putOptions: any = { metadata };
 	if (expirationTtl) {
 		putOptions.expirationTtl = expirationTtl;
