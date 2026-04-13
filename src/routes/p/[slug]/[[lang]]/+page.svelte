@@ -74,7 +74,7 @@
 			<button type="button" on:click={copyContent}>Copy Content</button>
 		{/if}
 		<button type="button" on:click={copyLink} class="secondary">Copy Link</button>
-		<a href="/p/{paste.slug}/raw" role="button" class="secondary">Raw</a>
+		<button type="button" class="secondary" on:click={() => (window.location.href = `/p/${paste.slug}/raw`)}>Raw</button>
 		{#if isOwner}
 			<button type="button" on:click={deletePaste} class="contrast">Delete</button>
 		{/if}
