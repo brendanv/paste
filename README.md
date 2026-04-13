@@ -28,11 +28,13 @@ A semi-private paste service, self-hostable on the free tier of Cloudflare Worke
 
 1. Clone the repository:
 2. Install dependencies:
+
    ```bash
    bun install
    ```
 
 3. Create a `.dev.vars` file with your Auth0 credentials. For production you'll need to do this in your Cloudflare dashboard.
+
    ```
    AUTH_SECRET="your-auth-secret-key-here"
    AUTH_AUTH0_ID=your-auth0-client-id
@@ -40,6 +42,7 @@ A semi-private paste service, self-hostable on the free tier of Cloudflare Worke
    ```
 
 4. Update `wrangler.jsonc` with your Auth0 domain:
+
    ```json
    "vars": {
      "AUTH_AUTH0_DOMAIN": "https://your-auth0-domain.auth0.com",
@@ -48,11 +51,13 @@ A semi-private paste service, self-hostable on the free tier of Cloudflare Worke
    ```
 
 5. Create a KV namespace and update the binding in `wrangler.jsonc`:
+
    ```bash
    wrangler kv:namespace create "PASTE_KV"
    ```
 
 6. Create an R2 bucket for image storage and update the binding in `wrangler.jsonc`:
+
    ```bash
    wrangler r2 bucket create paste-images
    ```

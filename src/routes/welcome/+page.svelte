@@ -31,8 +31,12 @@
 			<li>
 				<strong>Expiration options</strong> - Set pastes to expire from 1 hour to 1 year, or keep forever
 			</li>
-			<li><strong>Image uploads</strong> - Store and share images via API (JPEG, PNG, GIF, WebP, SVG)</li>
-			<li><strong>API access</strong> - Simple JSON API for creating pastes and uploading images</li>
+			<li>
+				<strong>Image uploads</strong> - Store and share images via API (JPEG, PNG, GIF, WebP, SVG)
+			</li>
+			<li>
+				<strong>API access</strong> - Simple JSON API for creating pastes and uploading images
+			</li>
 		</ul>
 
 		<h3>Examples</h3>

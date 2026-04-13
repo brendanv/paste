@@ -5,21 +5,23 @@ description: Creates text pastes and uploads images to a self-hosted paste servi
 
 ## Configuration (environment variables)
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `PASTE_URL` | Base URL of the paste service (e.g. `https://paste.example.com`) | Yes |
-| `PASTE_USER_ID` | Your user ID for API authentication | Yes |
-| `PASTE_API_KEY` | Your API key for authentication | Yes |
+| Variable        | Description                                                      | Required |
+| --------------- | ---------------------------------------------------------------- | -------- |
+| `PASTE_URL`     | Base URL of the paste service (e.g. `https://paste.example.com`) | Yes      |
+| `PASTE_USER_ID` | Your user ID for API authentication                              | Yes      |
+| `PASTE_API_KEY` | Your API key for authentication                                  | Yes      |
 
 ## Authentication
 
 All API requests require two headers:
+
 - `X-PASTE-USERID: <PASTE_USER_ID>`
 - `X-PASTE-API-KEY: <PASTE_API_KEY>`
 
 ## Defaults
 
 Unless the user specifies otherwise:
+
 - `visibility`: `logged_in`
 - `expiration`: `1week`
 
@@ -33,11 +35,11 @@ Content-Type: application/json
 
 ```json
 {
-  "content": "your text here",
-  "visibility": "logged_in",
-  "expiration": "1week",
-  "title": "optional title",
-  "customSlug": "optional-slug"
+	"content": "your text here",
+	"visibility": "logged_in",
+	"expiration": "1week",
+	"title": "optional title",
+	"customSlug": "optional-slug"
 }
 ```
 
@@ -62,6 +64,7 @@ echo "Paste created: $FULL_URL"
 Content-Type: multipart/form-data
 
 Form fields:
+
 - `file` (required): the image file. Supported types: `image/jpeg`, `image/png`, `image/gif`, `image/webp`, `image/svg+xml`. Max size: 10 MB.
 - `visibility` (optional, default `logged_in`)
 - `expiration` (optional, default `1week`)
@@ -90,16 +93,17 @@ Both endpoints return JSON:
 
 ```json
 {
-  "success": true,
-  "slug": "abc12",
-  "url": "/p/abc12"
+	"success": true,
+	"slug": "abc12",
+	"url": "/p/abc12"
 }
 ```
 
 On error:
+
 ```json
 {
-  "error": "description of the error"
+	"error": "description of the error"
 }
 ```
 
